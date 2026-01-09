@@ -462,10 +462,6 @@ export default function DashboardPage() {
                                                     Save Changes
                                                 </Button>
                                             )}
-                                            <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
-                                                <Upload className="w-4 h-4 mr-2 rotate-180" />
-                                                Download CSV
-                                            </Button>
                                         </div>
                                     </div>
 
@@ -496,19 +492,25 @@ export default function DashboardPage() {
                                     <div className="flex-1 flex items-center justify-center">Loading...</div>
                                 ) : symbolData ? (
                                     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-                                        <TabsList>
-                                            <TabsTrigger value="data" className="gap-2"><Database className="w-4 h-4" /> Data</TabsTrigger>
-                                            <TabsTrigger value="charts" className="gap-2"><ChartIcon className="w-4 h-4" /> Chart</TabsTrigger>
-                                            <TabsTrigger value="versions" className="gap-2"><History className="w-4 h-4" /> Versions</TabsTrigger>
-                                        </TabsList>
+                                        <div className="flex items-center justify-between">
+                                            <TabsList>
+                                                <TabsTrigger value="data" className="gap-2"><Database className="w-4 h-4" /> Data</TabsTrigger>
+                                                <TabsTrigger value="charts" className="gap-2"><ChartIcon className="w-4 h-4" /> Chart</TabsTrigger>
+                                                <TabsTrigger value="versions" className="gap-2"><History className="w-4 h-4" /> Versions</TabsTrigger>
+                                            </TabsList>
+                                            <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
+                                                <Upload className="w-4 h-4 mr-2 rotate-180" />
+                                                Download CSV
+                                            </Button>
+                                        </div>
 
                                         <TabsContent value="data" className="flex-1 overflow-auto border rounded-md mt-2 min-h-0 relative">
-                                            <Table>
+                                            <table className="w-full caption-bottom text-sm">
                                                 <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
                                                     <TableRow>
-                                                        <TableHead className="w-[120px] bg-background">Index</TableHead>
+                                                        <TableHead className="w-[120px] bg-background sticky top-0 z-20">Index</TableHead>
                                                         {symbolData.data.columns.map((col) => (
-                                                            <TableHead key={col} className="bg-background min-w-[100px]">{col}</TableHead>
+                                                            <TableHead key={col} className="bg-background min-w-[100px] sticky top-0 z-20">{col}</TableHead>
                                                         ))}
                                                     </TableRow>
                                                 </TableHeader>
@@ -533,7 +535,9 @@ export default function DashboardPage() {
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
-                                            </Table>
+                                                    ))}
+                                                </TableBody>
+                                            </table>
                                         </TabsContent>
 
                                         <TabsContent value="charts" className="flex-1 overflow-hidden mt-2 min-h-0">
@@ -584,42 +588,42 @@ export default function DashboardPage() {
                                             </div>
                                         </TabsContent>
                                     </Tabs>
-                                ) : null}
-                            </div>
-                        )}
+                        ) : null}
                     </div>
-                </main>
+                        )}
+            </div>
+        </main>
             </div >
 
-            {/* Upload Dialog */}
-            < Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen} >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Upload CSV</DialogTitle>
-                        <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                            <Label>Symbol Name</Label>
-                            <Input
-                                value={uploadSymbolName}
-                                onChange={e => setUploadSymbolName(e.target.value)}
-                                placeholder="e.g. MyData"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>CSV File</Label>
-                            <Input
-                                type="file"
-                                accept=".csv"
-                                onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                            />
-                        </div>
+        {/* Upload Dialog */ }
+        < Dialog open = { isUploadOpen } onOpenChange = { setIsUploadOpen } >
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Upload CSV</DialogTitle>
+                    <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                        <Label>Symbol Name</Label>
+                        <Input
+                            value={uploadSymbolName}
+                            onChange={e => setUploadSymbolName(e.target.value)}
+                            placeholder="e.g. MyData"
+                        />
                     </div>
-                    <DialogFooter>
-                        <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
-                    </DialogFooter>
-                </DialogContent>
+                    <div className="space-y-2">
+                        <Label>CSV File</Label>
+                        <Input
+                            type="file"
+                            accept=".csv"
+                            onChange={e => setUploadFile(e.target.files?.[0] || null)}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
+                </DialogFooter>
+            </DialogContent>
             </Dialog >
         </div >
     );
