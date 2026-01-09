@@ -11,12 +11,13 @@ A modern, web-based explorer for [ArcticDB](https://github.com/man-group/arcticd
 - **Library & Symbol Browser**: Intuitive sidebar navigation to explore your database structure.
 - **Data Viewer**: Tabular view of your dataframes with support for large datasets (headers/paging).
 - **Session Isolation**: Multi-user safe connection handling.
-- **Dockerized**: specific Dockerfiles for backend and frontend for easy deployment.
+- **Health Check**: Automatic backend connectivity check on startup.
+- **Dockerized**: Specific Dockerfiles for backend and frontend for easy deployment.
 
 ## Tech Stack
 
 - **Backend**: Python, FastAPI, ArcticDB, Pandas
-- **Frontend**: TypeScript, Next.js 14, TailwindCSS, shadcn/ui
+- **Frontend**: TypeScript, Next.js 16, TailwindCSS, shadcn/ui
 - **Containerization**: Docker, Docker Compose
 
 ## Quick Start (Docker)
@@ -27,21 +28,18 @@ The easiest way to run the application is with Docker Compose:
 docker-compose up --build
 ```
 
-Access the application at [http://localhost:3020](http://localhost:3020) (default frontend port).
+The frontend runs on port `3000` inside the container. If using a reverse proxy, point it to the container's internal port `3000`.
 
-### Configuring Ports
+### Production Deployment
 
-Edit [.env.local](.env.local) to adjust the frontend port:
+For production with a reverse proxy (e.g., Nginx, Traefik, Coolify):
 
-```bash
-FRONTEND_PORT=3020
-NEXT_PUBLIC_API_URL=http://localhost:8020/api
-```
+1. The frontend container exposes port `3000` internally
+2. The backend container exposes port `8000` internally
+3. Configure your reverse proxy to connect to the frontend container on port `3000`
+4. The backend is only accessible within the Docker network (not exposed externally)
 
-- `FRONTEND_PORT`: Port where the frontend will be accessible
-- `NEXT_PUBLIC_API_URL`: Backend URL for local development (use `http://localhost:BACKEND_PORT/api` when running backend manually)
-
-**Note**: In Docker Compose, the backend runs on an internal network and is not exposed to the host.
+**Note**: Both services communicate internally via Docker's network. The backend is never exposed to the internet.
 
 ## Manual Setup
 
@@ -52,10 +50,10 @@ cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8000
 ```
 
-Server runs on `http://localhost:8020`.
+Server runs on `http://localhost:8000`.
 
 ### 2. Frontend
 
@@ -65,14 +63,22 @@ npm install
 npm run dev
 ```
 
-Client runs on `http://localhost:3020`.
+Client runs on `http://localhost:3000`.
+
+## API Endpoints
+
+- `GET /api/health` - Health check endpoint (used by Docker healthcheck and frontend startup)
+- `POST /api/connect` - Connect to an ArcticDB instance
+- `GET /api/libraries` - List all libraries
+- `GET /api/libraries/{library}/symbols` - List symbols in a library
 
 ## Configuration
 
-- **Ports**:
-  - Frontend: 3020
-  - Backend: 8020
+- **Ports** (internal):
+  - Frontend: 3000
+  - Backend: 8000
 - **Environment Variables** (Optional):
+  - `NEXT_PUBLIC_API_URL`: Backend API URL (default: `http://backend:8000/api` in Docker)
   - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`: If set on the backend server, can be used for auth. Otherwise, use the UI input fields.
 
 ## Development

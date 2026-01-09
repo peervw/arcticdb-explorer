@@ -19,8 +19,8 @@ services:
       args:
         - NEXT_PUBLIC_API_URL=http://backend:8000/api
     container_name: arcticdb-frontend
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+    expose:
+      - "3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000/api
     depends_on:

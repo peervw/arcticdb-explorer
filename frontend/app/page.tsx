@@ -6,30 +6,46 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Database, Loader2 } from "lucide-react";
 
 export default function ConnectPage() {
-  const [uri, setUri] = useState("lmdb://./arctic_db");
+  const [scheme, setScheme] = useState("lmdb");
+  const [path, setPath] = useState("./arctic_db");
   const [awsKey, setAwsKey] = useState("");
   const [awsSecret, setAwsSecret] = useState("");
   const [awsRegion, setAwsRegion] = useState("us-east-1");
   const [loading, setLoading] = useState(false);
+  const [showAwsFields, setShowAwsFields] = useState(false);
   const router = useRouter();
-
-  const isS3 = uri.trim().startsWith("s3://");
 
   useEffect(() => {
     // Clear session when visiting connect page
     api.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (scheme === "s3" || scheme === "s3s") {
+      setShowAwsFields(true);
+      if (path === "./arctic_db") {
+        setPath(""); // Clear default local path when switching to S3
+      }
+    } else {
+      setShowAwsFields(false);
+      if (path === "") {
+        setPath("./arctic_db"); // Restore default when switching back if empty
+      }
+    }
+  }, [scheme]);
+
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isS3 && (!awsKey || !awsSecret)) {
+      const uri = `${scheme}://${path}`;
+      if (showAwsFields && (!awsKey || !awsSecret)) {
         // Warning validation could go here, but maybe env vars are intended
       }
       await api.connect(uri, awsKey, awsSecret, awsRegion);
@@ -53,29 +69,41 @@ export default function ConnectPage() {
             <CardTitle className="text-2xl font-bold">ArcticDB Explorer</CardTitle>
           </div>
           <CardDescription>
-            Enter your ArcticDB URI to start exploring your data.
+            Connect to your ArcticDB instance.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleConnect}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="uri">Connection URI</Label>
-              <Input
-                id="uri"
-                placeholder="lmdb://path/to/db or s3://..."
-                value={uri}
-                onChange={(e) => setUri(e.target.value)}
-                autoFocus
-              />
-              <p className="text-xs text-neutral-500">
-                Supports LMDB and S3 backends.
-              </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Connection Path</Label>
+                <div className="flex rounded-md shadow-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <Select value={scheme} onValueChange={setScheme}>
+                    <SelectTrigger className="w-[140px] rounded-r-none border-r-0 focus:ring-0 focus:ring-offset-0 bg-muted/50">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lmdb">lmdb://</SelectItem>
+                      <SelectItem value="s3">s3://</SelectItem>
+                      <SelectItem value="s3s">s3s://</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="path"
+                    placeholder={scheme.startsWith('s3') ? "my-bucket" : "./path/to/db"}
+                    value={path}
+                    onChange={(e) => setPath(e.target.value)}
+                    className="rounded-l-none font-mono focus-visible:ring-0 shadow-none"
+                    autoFocus
+                  />
+                </div>
+              </div>
             </div>
 
-            {isS3 && (
-              <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-4">
+            {showAwsFields && (
+              <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-4 border-t mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="awsKey">AWS Access Key ID (Optional)</Label>
+                  <Label htmlFor="awsKey">AWS Access Key ID</Label>
                   <Input
                     id="awsKey"
                     type="password"
@@ -85,7 +113,7 @@ export default function ConnectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="awsSecret">AWS Secret Access Key (Optional)</Label>
+                  <Label htmlFor="awsSecret">AWS Secret Access Key</Label>
                   <Input
                     id="awsSecret"
                     type="password"
@@ -95,7 +123,7 @@ export default function ConnectPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="awsRegion">AWS Region (Optional)</Label>
+                  <Label htmlFor="awsRegion">AWS Region</Label>
                   <Input
                     id="awsRegion"
                     placeholder="us-east-1"
@@ -106,7 +134,7 @@ export default function ConnectPage() {
               </div>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-6">
             <Button className="w-full" type="submit" disabled={loading}>
               {loading ? (
                 <>
