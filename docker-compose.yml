@@ -7,7 +7,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -17,12 +17,12 @@ services:
     build:
       context: ./frontend
       args:
-        - NEXT_PUBLIC_API_URL=http://backend:8000/api
+        - API_INTERNAL_URL=http://backend:8000/api
     container_name: arcticdb-frontend
     expose:
       - "3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api
+      - API_INTERNAL_URL=http://backend:8000/api
     depends_on:
       backend:
         condition: service_healthy
