@@ -41,7 +41,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Server runs on `http://localhost:8000`.
+Server runs on `http://localhost:8020`.
 
 ### 2. Frontend
 
@@ -51,13 +51,13 @@ npm install
 npm run dev
 ```
 
-Client runs on `http://localhost:3000`.
+Client runs on `http://localhost:3020`.
 
 ## Configuration
 
 - **Ports**:
-  - Frontend: 3000
-  - Backend: 8000
+  - Frontend: 3020
+  - Backend: 8020
 - **Environment Variables** (Optional):
   - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`: If set on the backend server, can be used for auth. Otherwise, use the UI input fields.
 
