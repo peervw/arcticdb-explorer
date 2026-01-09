@@ -109,7 +109,6 @@ export default function DashboardPage() {
     // Editing State
     const [localData, setLocalData] = useState<any[][]>([]);
     const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
-    const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
     const [isSaving, setIsSaving] = useState(false);
 
     // Pagination State
@@ -316,7 +315,6 @@ export default function DashboardPage() {
                 const num = parseFloat(val);
                 obj[col] = isNaN(num) ? val : num;
             });
-            return obj;
             return obj;
         });
     }, [symbolData]);
@@ -703,6 +701,43 @@ export default function DashboardPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog >
-        </div >
+            {/* Download CSV Dialog */}
+            <Dialog open={isDownloadOpen} onOpenChange={setIsDownloadOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Download CSV</DialogTitle>
+                        <DialogDescription>
+                            Choose how you want to download the data.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div
+                            className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-accent ${downloadType === 'current' ? 'border-primary bg-accent' : ''}`}
+                            onClick={() => setDownloadType('current')}
+                        >
+                            <div className="flex flex-col">
+                                <span className="font-semibold">Current View</span>
+                                <span className="text-sm text-muted-foreground">Download the data currently visible in the table.</span>
+                            </div>
+                        </div>
+                        <div
+                            className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-accent ${downloadType === 'all' ? 'border-primary bg-accent' : ''}`}
+                            onClick={() => setDownloadType('all')}
+                        >
+                            <div className="flex flex-col">
+                                <span className="font-semibold">All Data (Server-side)</span>
+                                <span className="text-sm text-muted-foreground">Download the full dataset from the server.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDownloadOpen(false)}>Cancel</Button>
+                        <Button onClick={handleDownloadSubmit} disabled={isDownloading}>
+                            {isDownloading ? "Downloading..." : "Download"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
