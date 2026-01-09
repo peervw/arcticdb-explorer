@@ -260,24 +260,58 @@ async def update_symbol_data(
             elif df_update.columns.name == 'index':
                  pass 
 
-        print(f"DEBUG: Updating symbol {symbol}")
-        print(f"DEBUG: Update Index Dtype: {df_update.index.dtype}")
-        print(f"DEBUG: Update Data Sample:\n{df_update.head()}")
+        # Type Coercion Logic
+        # Frontend sends JSON where data often degrades to strings.
+        # We try to infer proper types to match ArcticDB expectations.
 
-        # Ensure index is datetime if it looks like it (simple heuristic for common issue)
-        # If the original dataframe index is datetime, we should probably try to coerce?
-        # But we don't have the original loaded here (efficiently).
-        # We can try to infer.
+        # 1. Coerce Index (Datetime)
         if df_update.index.dtype == 'object':
              try:
+                 # Attempt to parse datetime index
+                 old_index = df_update.index
                  df_update.index = pd.to_datetime(df_update.index)
-                 print(f"DEBUG: Converted index to datetime: {df_update.index.dtype}")
-             except:
+                 print(f"DEBUG: Coerced index to datetime")
+             except (ValueError, TypeError):
+                 # Fallback: maintain original if coercion fails
+                 print("DEBUG: Index coercion failed, keeping as object")
                  pass
 
+        # 2. Coerce Columns (Numeric)
+        for col in df_update.columns:
+            if df_update[col].dtype == 'object':
+                try:
+                    # Try to convert to numeric (int/float)
+                    # errors='raise' would fail on 'foo', so we check via to_numeric
+                    # but if we want to support partial bad data? 
+                    # For now, let's assume we want to fix specific numeric-as-string issues
+                    ser_num = pd.to_numeric(df_update[col], errors='ignore')
+                    if ser_num.dtype != 'object':
+                         df_update[col] = ser_num
+                         print(f"DEBUG: Coerced column {col} to {ser_num.dtype}")
+                except:
+                    pass
         # Using lib.update to merge changes
         # Note: lib.update sorts by index.
-        lib.update(symbol, df_update)
+        try:
+            lib.update(symbol, df_update)
+            print("DEBUG: lib.update successful")
+        except Exception as e:
+            # Fallback for non-timeseries indexes or other update limitations
+            if "Update not supported" in str(e) or "E_ASSERTION_FAILURE" in str(e):
+                print(f"DEBUG: lib.update failed ({str(e)}), falling back to read-modify-write")
+                # Read-Modify-Write pattern
+                # Read latest
+                current_item = lib.read(symbol)
+                df_current = current_item.data
+                
+                # Apply updates (pandas update aligns on index)
+                df_current.update(df_update)
+                
+                # Write back (creates new version)
+                lib.write(symbol, df_current)
+                print("DEBUG: Fallback write successful")
+            else:
+                raise e
         
         return {"status": "updated", "rows_affected": len(df_update)}
     except Exception as e:
