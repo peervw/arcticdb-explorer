@@ -540,8 +540,6 @@ export default function DashboardPage() {
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
-                                                    ))}
-                                                </TableBody>
                                             </table>
                                         </TabsContent>
 
@@ -593,42 +591,42 @@ export default function DashboardPage() {
                                             </div>
                                         </TabsContent>
                                     </Tabs>
-                        ) : null}
-                    </div>
+                                ) : null}
+                            </div>
                         )}
-            </div>
-        </main>
+                    </div>
+                </main>
             </div >
 
-        {/* Upload Dialog */ }
-        < Dialog open = { isUploadOpen } onOpenChange = { setIsUploadOpen } >
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Upload CSV</DialogTitle>
-                    <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
-                    <div className="space-y-2">
-                        <Label>Symbol Name</Label>
-                        <Input
-                            value={uploadSymbolName}
-                            onChange={e => setUploadSymbolName(e.target.value)}
-                            placeholder="e.g. MyData"
-                        />
+            {/* Upload Dialog */}
+            < Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen} >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Upload CSV</DialogTitle>
+                        <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Symbol Name</Label>
+                            <Input
+                                value={uploadSymbolName}
+                                onChange={e => setUploadSymbolName(e.target.value)}
+                                placeholder="e.g. MyData"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>CSV File</Label>
+                            <Input
+                                type="file"
+                                accept=".csv"
+                                onChange={e => setUploadFile(e.target.files?.[0] || null)}
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label>CSV File</Label>
-                        <Input
-                            type="file"
-                            accept=".csv"
-                            onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                        />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
-                </DialogFooter>
-            </DialogContent>
+                    <DialogFooter>
+                        <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
+                    </DialogFooter>
+                </DialogContent>
             </Dialog >
         </div >
     );
