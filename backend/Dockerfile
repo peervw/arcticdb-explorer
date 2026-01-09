@@ -5,6 +5,7 @@ WORKDIR /app
 # Install system dependencies if required for arcticdb/pandas
 RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
