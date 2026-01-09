@@ -11,6 +11,18 @@ const getHeaders = () => {
 };
 
 export const api = {
+    healthCheck: async () => {
+        try {
+            const res = await fetch(`${API_BASE}/health`, { 
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error('Health check failed');
+            return await res.json();
+        } catch (error) {
+            throw new Error('Backend is not responding');
+        }
+    },
     connect: async (uri: string, aws_access_key_id?: string, aws_secret_access_key?: string, aws_region?: string) => {
         const res = await fetch(`${API_BASE}/connect`, {
             method: 'POST',

@@ -85,6 +85,10 @@ async def get_arctic_conn(x_session_token: str = Header(...)):
 
 # --- Endpoints ---
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "message": "Backend is running"}
+
 @app.post("/api/connect")
 async def connect(request: ConnectRequest):
     token = session_manager.create_session(request)

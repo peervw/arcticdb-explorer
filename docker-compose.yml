@@ -1,19 +1,29 @@
 services:
   backend:
     build: ./backend
+    container_name: arcticdb-backend
     volumes:
       - ./arctic_data:/app/arctic_db
     environment:
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   frontend:
     build:
       context: ./frontend
       args:
         - NEXT_PUBLIC_API_URL=http://backend:8000/api
+    container_name: arcticdb-frontend
     ports:
-      - "${FRONTEND_PORT}:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000/api
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
