@@ -122,12 +122,16 @@ export default function DashboardPage() {
 
     // Initial fetch of libraries
     useEffect(() => {
-        const token = localStorage.getItem('arctic_session_token');
-        if (!token) {
-            router.push('/');
-            return;
-        }
-        fetchLibraries(true);
+        const checkAuth = () => {
+            const token = localStorage.getItem('arctic_session_token');
+            if (!token) {
+                console.log("No token found, redirecting to home");
+                router.replace('/');
+                return;
+            }
+            fetchLibraries(true);
+        };
+        checkAuth();
     }, [router]);
 
     const fetchLibraries = async (silent: boolean = false) => {

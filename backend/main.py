@@ -187,15 +187,12 @@ async def get_symbol_data(
                 raise HTTPException(status_code=400, detail=f"Invalid query: {str(qe)}")
         
         filtered_rows = len(df)
-        df_head = df.head(limit)
         
-        # Convert to split dict manually to ensure index is preserved clearly
-        # df.to_dict('split') gives {index: [], columns: [], data: [[]]}
-        # Convert to split dict manually to ensure index is preserved clearly
-        # df.to_dict('split') gives {index: [], columns: [], data: [[]]}
         # Apply pagination
-        df_page = df_head.iloc[offset : offset + limit] if offset < len(df_head) else pd.DataFrame(columns=df.columns)
+        df_page = df.iloc[offset : offset + limit]
         
+        # Convert to split dict manually to ensure index is preserved clearly
+        # df.to_dict('split') gives {index: [], columns: [], data: [[]]}
         data = df_page.to_dict(orient='split')
         
         return {
@@ -263,12 +260,28 @@ async def update_symbol_data(
             elif df_update.columns.name == 'index':
                  pass 
 
+        print(f"DEBUG: Updating symbol {symbol}")
+        print(f"DEBUG: Update Index Dtype: {df_update.index.dtype}")
+        print(f"DEBUG: Update Data Sample:\n{df_update.head()}")
+
+        # Ensure index is datetime if it looks like it (simple heuristic for common issue)
+        # If the original dataframe index is datetime, we should probably try to coerce?
+        # But we don't have the original loaded here (efficiently).
+        # We can try to infer.
+        if df_update.index.dtype == 'object':
+             try:
+                 df_update.index = pd.to_datetime(df_update.index)
+                 print(f"DEBUG: Converted index to datetime: {df_update.index.dtype}")
+             except:
+                 pass
+
         # Using lib.update to merge changes
         # Note: lib.update sorts by index.
         lib.update(symbol, df_update)
         
         return {"status": "updated", "rows_affected": len(df_update)}
     except Exception as e:
+        print(f"ERROR: Update failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/libraries/{lib_name}/symbols/{symbol}/versions")
