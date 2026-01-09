@@ -24,6 +24,7 @@ class ConnectRequest(BaseModel):
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
     aws_region: Optional[str] = None
+    aws_auth: Optional[bool] = True
 
 class CreateLibraryRequest(BaseModel):
     name: str
@@ -43,7 +44,7 @@ class ArcticSessionManager:
             conn = None
             if req.uri.startswith("lmdb://") or req.uri.startswith("mongodb://"):
                 conn = arcticdb.Arctic(req.uri)
-            elif req.uri.startswith("s3://"):
+            elif req.uri.startswith("s3://") or req.uri.startswith("s3s://"):
                 if req.aws_access_key_id and req.aws_secret_access_key:
                     from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
                     parsed = urlparse(req.uri)
@@ -52,6 +53,11 @@ class ArcticSessionManager:
                     query['secret'] = [req.aws_secret_access_key]
                     if req.aws_region:
                          query['region'] = [req.aws_region]
+
+                    # Handle aws_auth flag
+                    if req.aws_auth is False:
+                        query['aws_auth'] = ['false']
+
                     new_query = urlencode(query, doseq=True)
                     secure_uri = list(parsed)
                     secure_uri[4] = new_query

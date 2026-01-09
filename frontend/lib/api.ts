@@ -23,7 +23,7 @@ export const api = {
             throw new Error('Backend is not responding');
         }
     },
-    connect: async (uri: string, aws_access_key_id?: string, aws_secret_access_key?: string, aws_region?: string) => {
+    connect: async (uri: string, aws_access_key_id?: string, aws_secret_access_key?: string, aws_region?: string, aws_auth: boolean = true) => {
         const res = await fetch(`${API_BASE}/connect`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -31,7 +31,8 @@ export const api = {
                 uri,
                 aws_access_key_id: aws_access_key_id || undefined,
                 aws_secret_access_key: aws_secret_access_key || undefined,
-                aws_region: aws_region || undefined
+                aws_region: aws_region || undefined,
+                aws_auth
             }),
         });
         if (!res.ok) {

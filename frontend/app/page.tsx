@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Database, Loader2 } from "lucide-react";
@@ -17,6 +18,7 @@ export default function ConnectPage() {
   const [awsKey, setAwsKey] = useState("");
   const [awsSecret, setAwsSecret] = useState("");
   const [awsRegion, setAwsRegion] = useState("us-east-1");
+  const [awsAuth, setAwsAuth] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showAwsFields, setShowAwsFields] = useState(false);
   const router = useRouter();
@@ -48,7 +50,7 @@ export default function ConnectPage() {
       if (showAwsFields && (!awsKey || !awsSecret)) {
         // Warning validation could go here, but maybe env vars are intended
       }
-      await api.connect(uri, awsKey, awsSecret, awsRegion);
+      await api.connect(uri, awsKey, awsSecret, awsRegion, awsAuth);
       toast.success("Connected to ArcticDB");
       router.push("/dashboard");
     } catch (err: any) {
@@ -122,14 +124,22 @@ export default function ConnectPage() {
                     onChange={(e) => setAwsSecret(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="awsRegion">AWS Region</Label>
-                  <Input
-                    id="awsRegion"
-                    placeholder="us-east-1"
-                    value={awsRegion}
-                    onChange={(e) => setAwsRegion(e.target.value)}
-                  />
+                <div className="flex gap-4">
+                  <div className="space-y-2 flex-1">
+                    <Label htmlFor="awsRegion">AWS Region</Label>
+                    <Input
+                      id="awsRegion"
+                      placeholder="us-east-1"
+                      value={awsRegion}
+                      onChange={(e) => setAwsRegion(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 flex flex-col justify-end pb-2">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="awsAuth" checked={awsAuth} onCheckedChange={setAwsAuth} />
+                      <Label htmlFor="awsAuth">AWS Auth</Label>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
