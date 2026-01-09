@@ -1,18 +1,19 @@
 services:
   backend:
     build: ./backend
-    ports:
-      - "8020:8000"
     volumes:
       - ./arctic_data:/app/arctic_db
     environment:
       - PYTHONUNBUFFERED=1
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://backend:8000/api
     ports:
-      - "3020:3000"
+      - "${FRONTEND_PORT}:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api
     depends_on:
       - backend

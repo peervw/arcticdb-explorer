@@ -27,7 +27,21 @@ The easiest way to run the application is with Docker Compose:
 docker-compose up --build
 ```
 
-Access the application at [http://localhost:3000](http://localhost:3000).
+Access the application at [http://localhost:3020](http://localhost:3020) (default frontend port).
+
+### Configuring Ports
+
+Edit [.env.local](.env.local) to adjust the frontend port:
+
+```bash
+FRONTEND_PORT=3020
+NEXT_PUBLIC_API_URL=http://localhost:8020/api
+```
+
+- `FRONTEND_PORT`: Port where the frontend will be accessible
+- `NEXT_PUBLIC_API_URL`: Backend URL for local development (use `http://localhost:BACKEND_PORT/api` when running backend manually)
+
+**Note**: In Docker Compose, the backend runs on an internal network and is not exposed to the host.
 
 ## Manual Setup
 
