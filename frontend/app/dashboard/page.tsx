@@ -455,6 +455,7 @@ export default function DashboardPage() {
                                                 <span className="px-2 py-0.5 bg-muted rounded text-xs text-muted-foreground font-mono">v{symbolData.version}</span>
                                             )}
                                         </div>
+                                        <div className="flex items-center gap-2">
                                             {modifiedRows.size > 0 && (
                                                 <Button size="sm" onClick={handleSave} disabled={isSaving}>
                                                     <Save className="w-4 h-4 mr-2" />
@@ -492,134 +493,134 @@ export default function DashboardPage() {
                                 </span>
 
                                 {loading ? (
-                            <div className="flex-1 flex items-center justify-center">Loading...</div>
-                        ) : symbolData ? (
-                            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-                                <TabsList>
-                                    <TabsTrigger value="data" className="gap-2"><Database className="w-4 h-4" /> Data</TabsTrigger>
-                                    <TabsTrigger value="charts" className="gap-2"><ChartIcon className="w-4 h-4" /> Chart</TabsTrigger>
-                                    <TabsTrigger value="versions" className="gap-2"><History className="w-4 h-4" /> Versions</TabsTrigger>
-                                </TabsList>
+                                    <div className="flex-1 flex items-center justify-center">Loading...</div>
+                                ) : symbolData ? (
+                                    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
+                                        <TabsList>
+                                            <TabsTrigger value="data" className="gap-2"><Database className="w-4 h-4" /> Data</TabsTrigger>
+                                            <TabsTrigger value="charts" className="gap-2"><ChartIcon className="w-4 h-4" /> Chart</TabsTrigger>
+                                            <TabsTrigger value="versions" className="gap-2"><History className="w-4 h-4" /> Versions</TabsTrigger>
+                                        </TabsList>
 
-                                <TabsContent value="data" className="flex-1 overflow-auto border rounded-md mt-2 min-h-0 relative">
-                                    <Table>
-                                        <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
-                                            <TableRow>
-                                                <TableHead className="w-[120px] bg-background">Index</TableHead>
-                                                {symbolData.data.columns.map((col) => (
-                                                    <TableHead key={col} className="bg-background min-w-[100px]">{col}</TableHead>
-                                                ))}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {localData.map((row, i) => (
-                                                <TableRow key={i} className={modifiedRows.has(i) ? "bg-yellow-50 dark:bg-yellow-900/20" : ""}>
-                                                    <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                                                        {String(symbolData.data.index[i])}
-                                                    </TableCell>
-                                                    {row.map((cell, j) => (
-                                                        <TableCell key={j} className="p-0">
-                                                            <div
-                                                                contentEditable
-                                                                suppressContentEditableWarning
-                                                                onBlur={(e) => handleCellEdit(i, j, e.currentTarget.textContent || "")}
-                                                                className="p-4 outline-none focus:bg-accent focus:ring-1 focus:ring-inset ring-primary min-w-[50px] min-h-[40px]"
-                                                            >
-                                                                {String(cell)}
-                                                            </div>
-                                                        </TableCell>
+                                        <TabsContent value="data" className="flex-1 overflow-auto border rounded-md mt-2 min-h-0 relative">
+                                            <Table>
+                                                <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+                                                    <TableRow>
+                                                        <TableHead className="w-[120px] bg-background">Index</TableHead>
+                                                        {symbolData.data.columns.map((col) => (
+                                                            <TableHead key={col} className="bg-background min-w-[100px]">{col}</TableHead>
+                                                        ))}
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {localData.map((row, i) => (
+                                                        <TableRow key={i} className={modifiedRows.has(i) ? "bg-yellow-50 dark:bg-yellow-900/20" : ""}>
+                                                            <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                                                                {String(symbolData.data.index[i])}
+                                                            </TableCell>
+                                                            {row.map((cell, j) => (
+                                                                <TableCell key={j} className="p-0">
+                                                                    <div
+                                                                        contentEditable
+                                                                        suppressContentEditableWarning
+                                                                        onBlur={(e) => handleCellEdit(i, j, e.currentTarget.textContent || "")}
+                                                                        className="p-4 outline-none focus:bg-accent focus:ring-1 focus:ring-inset ring-primary min-w-[50px] min-h-[40px]"
+                                                                    >
+                                                                        {String(cell)}
+                                                                    </div>
+                                                                </TableCell>
+                                                            ))}
+                                                        </TableRow>
                                                     ))}
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TabsContent>
+                                                </TableBody>
+                                            </Table>
+                                        </TabsContent>
 
-                                <TabsContent value="charts" className="flex-1 overflow-hidden mt-2 min-h-0">
-                                    <div className="h-full w-full border rounded-md p-4">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={chartData}>
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis dataKey="index" tick={{ fontSize: 12 }} />
-                                                <YAxis tick={{ fontSize: 12 }} />
-                                                <Tooltip
-                                                    contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
-                                                    labelStyle={{ color: 'var(--foreground)' }}
-                                                />
-                                                <Legend />
-                                                {symbolData.data.columns.map((col, idx) => (
-                                                    <Line
-                                                        key={col}
-                                                        type="monotone"
-                                                        dataKey={col}
-                                                        stroke={`hsl(${idx * 137.508 % 360}, 70%, 50%)`}
-                                                        dot={false}
-                                                        strokeWidth={2}
-                                                    />
-                                                ))}
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                </TabsContent>
-
-                                <TabsContent value="versions" className="flex-1 overflow-auto mt-2 min-h-0">
-                                    <div className="space-y-4">
-                                        <div className="text-sm font-medium text-muted-foreground">Version History</div>
-                                        <ScrollArea className="h-full">
-                                            <div className="space-y-2">
-                                                {versions.map((ver, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between p-3 border rounded-md hover:bg-accent cursor-pointer" onClick={() => handleSymbolClick(selectedSymbol, "", ver.version)}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">Version {ver.version}</span>
-                                                            <span className="text-xs text-muted-foreground">{new Date(ver.date).toLocaleString()}</span>
-                                                        </div>
-                                                        <Button variant="outline" size="sm">
-                                                            Load
-                                                        </Button>
-                                                    </div>
-                                                ))}
+                                        <TabsContent value="charts" className="flex-1 overflow-hidden mt-2 min-h-0">
+                                            <div className="h-full w-full border rounded-md p-4">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={chartData}>
+                                                        <CartesianGrid strokeDasharray="3 3" />
+                                                        <XAxis dataKey="index" tick={{ fontSize: 12 }} />
+                                                        <YAxis tick={{ fontSize: 12 }} />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
+                                                            labelStyle={{ color: 'var(--foreground)' }}
+                                                        />
+                                                        <Legend />
+                                                        {symbolData.data.columns.map((col, idx) => (
+                                                            <Line
+                                                                key={col}
+                                                                type="monotone"
+                                                                dataKey={col}
+                                                                stroke={`hsl(${idx * 137.508 % 360}, 70%, 50%)`}
+                                                                dot={false}
+                                                                strokeWidth={2}
+                                                            />
+                                                        ))}
+                                                    </LineChart>
+                                                </ResponsiveContainer>
                                             </div>
-                                        </ScrollArea>
-                                    </div>
-                                </TabsContent>
-                            </Tabs>
-                        ) : null}
-                    </div>
-                )}
-            </div>
-        </main>
-    </div >
+                                        </TabsContent>
 
-        {/* Upload Dialog */ }
-        < Dialog open = { isUploadOpen } onOpenChange = { setIsUploadOpen } >
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Upload CSV</DialogTitle>
-                    <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
-                    <div className="space-y-2">
-                        <Label>Symbol Name</Label>
-                        <Input
-                            value={uploadSymbolName}
-                            onChange={e => setUploadSymbolName(e.target.value)}
-                            placeholder="e.g. MyData"
-                        />
+                                        <TabsContent value="versions" className="flex-1 overflow-auto mt-2 min-h-0">
+                                            <div className="space-y-4">
+                                                <div className="text-sm font-medium text-muted-foreground">Version History</div>
+                                                <ScrollArea className="h-full">
+                                                    <div className="space-y-2">
+                                                        {versions.map((ver, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between p-3 border rounded-md hover:bg-accent cursor-pointer" onClick={() => handleSymbolClick(selectedSymbol, "", ver.version)}>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium">Version {ver.version}</span>
+                                                                    <span className="text-xs text-muted-foreground">{new Date(ver.date).toLocaleString()}</span>
+                                                                </div>
+                                                                <Button variant="outline" size="sm">
+                                                                    Load
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
+                                            </div>
+                                        </TabsContent>
+                                    </Tabs>
+                                ) : null}
+                            </div>
+                        )}
                     </div>
-                    <div className="space-y-2">
-                        <Label>CSV File</Label>
-                        <Input
-                            type="file"
-                            accept=".csv"
-                            onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                        />
+                </main>
+            </div >
+
+            {/* Upload Dialog */}
+            < Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen} >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Upload CSV</DialogTitle>
+                        <DialogDescription>Create a new symbol from a CSV file.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Symbol Name</Label>
+                            <Input
+                                value={uploadSymbolName}
+                                onChange={e => setUploadSymbolName(e.target.value)}
+                                placeholder="e.g. MyData"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>CSV File</Label>
+                            <Input
+                                type="file"
+                                accept=".csv"
+                                onChange={e => setUploadFile(e.target.files?.[0] || null)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <DialogFooter>
-                    <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
-                </DialogFooter>
-            </DialogContent>
-    </Dialog >
-</div >
+                    <DialogFooter>
+                        <Button onClick={handleUpload} disabled={!uploadFile || !uploadSymbolName}>Upload</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog >
+        </div >
     );
 }
