@@ -25,3 +25,4 @@ yarn-error.log*
 
 # Docker
 .docker_data/
+.next/
