@@ -113,8 +113,13 @@ export default function DashboardPage() {
 
     // Initial fetch of libraries
     useEffect(() => {
+        const token = localStorage.getItem('arctic_session_token');
+        if (!token) {
+            router.push('/');
+            return;
+        }
         fetchLibraries();
-    }, []);
+    }, [router]);
 
     const fetchLibraries = async () => {
         try {
