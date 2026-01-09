@@ -2,7 +2,13 @@
 
 A modern, web-based explorer for [ArcticDB](https://github.com/man-group/arcticdb), a high-performance Python-native database for time-series and tick data.
 
-![Dashboard Preview](dashboard_preview.png)
+## Screenshots
+
+### Connection Interface
+![Connect to ArcticDB](./frontend/public/Connect.png)
+
+### Data Explorer
+![Explore and view data](./frontend/public/Explorer.png)
 
 ## Features
 
