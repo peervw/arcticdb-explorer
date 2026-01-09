@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+arcticdb
+pandas
+pydantic
+python-multipart
