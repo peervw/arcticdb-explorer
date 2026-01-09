@@ -11,19 +11,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+      retries: 3
       start_period: 30s
+    networks:
+      - arcticdb-network
 
   frontend:
     build:
       context: ./frontend
       args:
-        - API_INTERNAL_URL=http://backend:8000/api
+        - API_INTERNAL_URL=http://arcticdb-backend:8000/api
     container_name: arcticdb-frontend
     expose:
       - "3000"
     environment:
-      - API_INTERNAL_URL=http://backend:8000/api
+      - API_INTERNAL_URL=http://arcticdb-backend:8000/api
     depends_on:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - arcticdb-network
+
+networks:
+  arcticdb-network:
+    driver: bridge
