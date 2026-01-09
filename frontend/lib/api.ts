@@ -59,14 +59,24 @@ export const api = {
         return res.json();
     },
 
-    getData: async (library: string, symbol: string, query?: string, version?: number) => {
+    getData: async (library: string, symbol: string, query?: string, version?: number, offset: number = 0) => {
         const params = new URLSearchParams();
         if (query) params.append('query', query);
         if (version !== undefined) params.append('version', version.toString());
+        params.append('offset', offset.toString());
 
         const res = await fetch(`${API_BASE}/libraries/${library}/symbols/${symbol}/data?${params.toString()}`, { headers: getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch data');
         return res.json();
+    },
+
+    getCSV: async (library: string, symbol: string, version?: number) => {
+        const params = new URLSearchParams();
+        if (version !== undefined) params.append('version', version.toString());
+
+        const res = await fetch(`${API_BASE}/libraries/${library}/symbols/${symbol}/csv?${params.toString()}`, { headers: getHeaders() });
+        if (!res.ok) throw new Error('Failed to download CSV');
+        return res.blob();
     },
 
     createLibrary: async (name: string) => {

@@ -109,7 +109,17 @@ export default function DashboardPage() {
     // Editing State
     const [localData, setLocalData] = useState<any[][]>([]);
     const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
+    const [modifiedRows, setModifiedRows] = useState<Set<number>>(new Set());
     const [isSaving, setIsSaving] = useState(false);
+
+    // Pagination State
+    const [page, setPage] = useState(1);
+    const pageSize = 100;
+
+    // CSV Download State
+    const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+    const [downloadType, setDownloadType] = useState<"current" | "all">("current");
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Initial fetch of libraries
     useEffect(() => {
@@ -118,13 +128,14 @@ export default function DashboardPage() {
             router.push('/');
             return;
         }
-        fetchLibraries();
+        fetchLibraries(true);
     }, [router]);
 
-    const fetchLibraries = async () => {
+    const fetchLibraries = async (silent: boolean = false) => {
         try {
             const res = await api.getLibraries();
             setLibraries(res.libraries);
+            if (!silent) toast.success("Libraries refreshed");
         } catch (err: any) {
             toast.error("Failed to fetch libraries: " + err.message);
         }
@@ -137,7 +148,7 @@ export default function DashboardPage() {
             toast.success(`Library ${newLibName} created`);
             setIsCreateLibOpen(false);
             setNewLibName("");
-            fetchLibraries();
+            fetchLibraries(true);
         } catch (err: any) {
             toast.error(err.message);
         }
@@ -164,17 +175,21 @@ export default function DashboardPage() {
         }
     }
 
-    const handleSymbolClick = async (sym: string, forceQuery?: string, version?: number) => {
+    const handleSymbolClick = async (sym: string, forceQuery?: string, version?: number, newPage: number = 1) => {
         setSelectedSymbol(sym);
+        setPage(newPage);
         setLoading(true);
         setModifiedRows(new Set());
         try {
-            const res = await api.getData(selectedLibrary!, sym, forceQuery ?? query, version);
+            const offset = (newPage - 1) * pageSize;
+            const res = await api.getData(selectedLibrary!, sym, forceQuery ?? query, version, offset);
             setSymbolData(res);
             setLocalData(res.data.data); // Initialize local editable data
 
-            // Fetch versions in background
-            api.getVersions(selectedLibrary!, sym).then(v => setVersions(v.versions)).catch(console.error);
+            // Fetch versions in background only on first page load or new symbol
+            if (newPage === 1) {
+                api.getVersions(selectedLibrary!, sym).then(v => setVersions(v.versions)).catch(console.error);
+            }
 
         } catch (err: any) {
             toast.error("Failed to fetch data: " + err.message);
@@ -302,8 +317,38 @@ export default function DashboardPage() {
                 obj[col] = isNaN(num) ? val : num;
             });
             return obj;
+            return obj;
         });
     }, [symbolData]);
+
+    const handleDownloadSubmit = async () => {
+        if (!selectedLibrary || !selectedSymbol || !symbolData) return;
+
+        try {
+            setIsDownloading(true);
+            if (downloadType === "current") {
+                handleDownloadCSV(); // existing client-side logic
+            } else {
+                // Server-side download
+                const blob = await api.getCSV(selectedLibrary, selectedSymbol, symbolData.version);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `${selectedSymbol}_full.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }
+            setIsDownloadOpen(false);
+            toast.success("Download started");
+        } catch (err: any) {
+            toast.error("Download failed: " + err.message);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     const handleDisconnect = () => {
         api.disconnect();
@@ -361,7 +406,7 @@ export default function DashboardPage() {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" size="icon" onClick={fetchLibraries} className="h-6 w-6">
+                            <Button variant="ghost" size="icon" onClick={() => fetchLibraries(false)} className="h-6 w-6">
                                 <RefreshCw className="h-3 w-3" />
                             </Button>
                         </div>
@@ -503,44 +548,74 @@ export default function DashboardPage() {
                                                 <TabsTrigger value="charts" className="gap-2"><ChartIcon className="w-4 h-4" /> Chart</TabsTrigger>
                                                 <TabsTrigger value="versions" className="gap-2"><History className="w-4 h-4" /> Versions</TabsTrigger>
                                             </TabsList>
-                                            <Button variant="outline" size="sm" onClick={handleDownloadCSV}>
+                                            <Button variant="outline" size="sm" onClick={() => setIsDownloadOpen(true)}>
                                                 <Upload className="w-4 h-4 mr-2 rotate-180" />
                                                 Download CSV
                                             </Button>
                                         </div>
 
-                                        <TabsContent value="data" className="flex-1 overflow-auto border rounded-md mt-2 min-h-0 relative">
-                                            <table className="w-full caption-bottom text-sm">
-                                                <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
-                                                    <TableRow>
-                                                        <TableHead className="w-[120px] bg-background sticky top-0 z-20">Index</TableHead>
-                                                        {symbolData.data.columns.map((col) => (
-                                                            <TableHead key={col} className="bg-background min-w-[100px] sticky top-0 z-20">{col}</TableHead>
-                                                        ))}
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {localData.map((row, i) => (
-                                                        <TableRow key={i} className={modifiedRows.has(i) ? "bg-yellow-50 dark:bg-yellow-900/20" : ""}>
-                                                            <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                                                                {String(symbolData.data.index[i])}
-                                                            </TableCell>
-                                                            {row.map((cell, j) => (
-                                                                <TableCell key={j} className="p-0">
-                                                                    <div
-                                                                        contentEditable
-                                                                        suppressContentEditableWarning
-                                                                        onBlur={(e) => handleCellEdit(i, j, e.currentTarget.textContent || "")}
-                                                                        className="p-4 outline-none focus:bg-accent focus:ring-1 focus:ring-inset ring-primary min-w-[50px] min-h-[40px]"
-                                                                    >
-                                                                        {String(cell)}
-                                                                    </div>
-                                                                </TableCell>
+                                        <TabsContent value="data" className="flex-1 overflow-auto border rounded-md mt-2 min-h-0 relative flex flex-col">
+                                            <div className="flex-1 overflow-auto">
+                                                <table className="w-full caption-bottom text-sm">
+                                                    <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+                                                        <TableRow>
+                                                            <TableHead className="w-[120px] bg-background sticky top-0 z-20">Index</TableHead>
+                                                            {symbolData.data.columns.map((col) => (
+                                                                <TableHead key={col} className="bg-background min-w-[100px] sticky top-0 z-20">{col}</TableHead>
                                                             ))}
                                                         </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </table>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {localData.map((row, i) => (
+                                                            <TableRow key={i} className={modifiedRows.has(i) ? "bg-yellow-50 dark:bg-yellow-900/20" : ""}>
+                                                                <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                                                                    {String(symbolData.data.index[i])}
+                                                                </TableCell>
+                                                                {row.map((cell, j) => (
+                                                                    <TableCell key={j} className="p-0">
+                                                                        <div
+                                                                            contentEditable
+                                                                            suppressContentEditableWarning
+                                                                            onBlur={(e) => handleCellEdit(i, j, e.currentTarget.textContent || "")}
+                                                                            className="p-4 outline-none focus:bg-accent focus:ring-1 focus:ring-inset ring-primary min-w-[50px] min-h-[40px]"
+                                                                        >
+                                                                            {String(cell)}
+                                                                        </div>
+                                                                    </TableCell>
+                                                                ))}
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </table>
+                                            </div>
+
+                                            {/* Pagination Controls */}
+                                            <div className="p-2 border-t flex items-center justify-between bg-card text-sm shrink-0">
+                                                <div className="text-muted-foreground">
+                                                    Page {page}
+                                                    {symbolData.filtered_rows !== undefined && (
+                                                        <span> • {Math.min((page - 1) * pageSize + 1, symbolData.filtered_rows)}-{Math.min(page * pageSize, symbolData.filtered_rows)} of {symbolData.filtered_rows}</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleSymbolClick(selectedSymbol!, query, symbolData.version, page - 1)}
+                                                        disabled={page <= 1 || loading}
+                                                    >
+                                                        Previous
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleSymbolClick(selectedSymbol!, query, symbolData.version, page + 1)}
+                                                        disabled={localData.length < pageSize || (symbolData.filtered_rows !== undefined && page * pageSize >= symbolData.filtered_rows) || loading}
+                                                    >
+                                                        Next
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </TabsContent>
 
                                         <TabsContent value="charts" className="flex-1 overflow-hidden mt-2 min-h-0">

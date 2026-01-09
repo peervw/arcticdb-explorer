@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Header, Depends, UploadFile, File, Body
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import arcticdb
@@ -159,7 +160,8 @@ async def delete_symbol(lib_name: str, symbol: str, conn = Depends(get_arctic_co
 async def get_symbol_data(
     lib_name: str, 
     symbol: str, 
-    limit: int = 100, 
+    limit: int = 100,
+    offset: int = 0,
     query: Optional[str] = None,
     version: Optional[int] = None,
     conn = Depends(get_arctic_conn)
@@ -189,7 +191,12 @@ async def get_symbol_data(
         
         # Convert to split dict manually to ensure index is preserved clearly
         # df.to_dict('split') gives {index: [], columns: [], data: [[]]}
-        data = df_head.to_dict(orient='split')
+        # Convert to split dict manually to ensure index is preserved clearly
+        # df.to_dict('split') gives {index: [], columns: [], data: [[]]}
+        # Apply pagination
+        df_page = df_head.iloc[offset : offset + limit] if offset < len(df_head) else pd.DataFrame(columns=df.columns)
+        
+        data = df_page.to_dict(orient='split')
         
         return {
             "symbol": symbol,
@@ -198,6 +205,30 @@ async def get_symbol_data(
             "filtered_rows": filtered_rows,
             "data": data
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/libraries/{lib_name}/symbols/{symbol}/csv")
+async def get_symbol_csv(
+    lib_name: str, 
+    symbol: str, 
+    version: Optional[int] = None,
+    conn = Depends(get_arctic_conn)
+):
+    try:
+        lib = conn[lib_name]
+        read_args = {}
+        if version is not None:
+             read_args['as_of'] = version
+        
+        item = lib.read(symbol, **read_args)
+        df = item.data
+        
+        stream = io.StringIO()
+        df.to_csv(stream, index=True)
+        response = StreamingResponse(iter([stream.getvalue()]), media_type="text/csv")
+        response.headers["Content-Disposition"] = f"attachment; filename={symbol}.csv"
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
