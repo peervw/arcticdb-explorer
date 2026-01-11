@@ -70,7 +70,9 @@ class ArcticSessionManager:
                  conn = arcticdb.Arctic(req.uri)
             
             # Verify connection
-            conn.list_libraries()
+            print(f"DEBUG: Connecting to URI starting with: {req.uri.split(':')[0]}")
+            libs = conn.list_libraries()
+            print(f"DEBUG: Connection successful. Libraries found: {libs}")
 
             token = str(uuid.uuid4())
             self.sessions[token] = conn
