@@ -434,6 +434,13 @@ export default function DashboardPage() {
                                     <span className="truncate">{lib}</span>
                                 </div>
                             ))}
+                            {libraries.length === 0 && (
+                                <div className="p-4 text-xs text-muted-foreground text-center border-dashed border-2 rounded-md m-2">
+                                    No libraries found.
+                                    <br />
+                                    <span className="opacity-70">If this is unexpected, check your connection or server status.</span>
+                                </div>
+                            )}
                         </div>
                     </ScrollArea>
                 </aside>
