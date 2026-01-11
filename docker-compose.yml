@@ -21,8 +21,8 @@ services:
       args:
         - API_INTERNAL_URL=http://arcticdb-backend:8000/api
     container_name: arcticdb-frontend
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     environment:
       - API_INTERNAL_URL=http://arcticdb-backend:8000/api
     depends_on:
