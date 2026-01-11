@@ -72,7 +72,7 @@ class ArcticSessionManager:
             # Verify connection
             libs = conn.list_libraries()
             if not libs:
-                raise Exception("No libraries found. Connection rejected as per policy.")
+                raise Exception("No ArcticDB libraries found. Connection rejected.")
             
             token = str(uuid.uuid4())
             self.sessions[token] = conn
