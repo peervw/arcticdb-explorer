@@ -1,5 +1,5 @@
 services:
-  arctic-backend: # Renamed for uniqueness
+  arctic-backend:
     build: ./backend
     volumes:
       - arctic_data:/app/arctic_db
@@ -12,10 +12,9 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - arctic-internal
       - dokploy-network
 
-  arctic-frontend: # Renamed for uniqueness
+  arctic-frontend:
     build:
       context: ./frontend
       args:
@@ -26,15 +25,12 @@ services:
       arctic-backend:
         condition: service_healthy
     restart: unless-stopped
+    expose:
+      - 3000
     networks:
-      - arctic-internal
       - dokploy-network
 
 networks:
-  # Internal network for just these two to talk
-  arctic-internal:
-    driver: bridge
-  # External network for Dokploy's proxy to reach the frontend
   dokploy-network:
     external: true
 
