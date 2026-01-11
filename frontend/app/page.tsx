@@ -19,6 +19,7 @@ export default function ConnectPage() {
   const [awsSecret, setAwsSecret] = useState("");
   const [awsRegion, setAwsRegion] = useState("us-east-1");
   const [awsAuth, setAwsAuth] = useState(true);
+  const [rememberConnection, setRememberConnection] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showAwsFields, setShowAwsFields] = useState(false);
   const router = useRouter();
@@ -26,6 +27,23 @@ export default function ConnectPage() {
   useEffect(() => {
     // Clear session when visiting connect page
     api.disconnect();
+
+    // Load saved connection details
+    const saved = localStorage.getItem('saved_connection');
+    if (saved) {
+      try {
+        const details = JSON.parse(saved);
+        setScheme(details.scheme || "lmdb");
+        setPath(details.path || "");
+        setAwsKey(details.awsKey || "");
+        setAwsSecret(details.awsSecret || "");
+        setAwsRegion(details.awsRegion || "us-east-1");
+        setAwsAuth(details.awsAuth !== undefined ? details.awsAuth : true);
+        // setShowAwsFields will be handled by the scheme useEffect
+      } catch (e) {
+        console.error("Failed to parse saved connection", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -36,8 +54,11 @@ export default function ConnectPage() {
       }
     } else {
       setShowAwsFields(false);
+      // Only restore default if we are not loading a saved non-default path or if it's empty
+      // But simpler check: if path is empty, set default.
+      // If we loaded a saved "lmdb" connection with a custom path, we don't want to overwrite it.
       if (path === "") {
-        setPath("./arctic_db"); // Restore default when switching back if empty
+        setPath("./arctic_db");
       }
     }
   }, [scheme]);
@@ -45,6 +66,22 @@ export default function ConnectPage() {
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Save or clear connection details
+    if (rememberConnection) {
+      const details = {
+        scheme,
+        path,
+        awsKey,
+        awsSecret,
+        awsRegion,
+        awsAuth
+      };
+      localStorage.setItem('saved_connection', JSON.stringify(details));
+    } else {
+      localStorage.removeItem('saved_connection');
+    }
+
     try {
       const uri = `${scheme}://${path}`;
       if (showAwsFields && (!awsKey || !awsSecret)) {
@@ -143,6 +180,17 @@ export default function ConnectPage() {
                 </div>
               </div>
             )}
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="remember"
+                checked={rememberConnection}
+                onCheckedChange={setRememberConnection}
+              />
+              <Label htmlFor="remember" className="text-sm text-muted-foreground font-normal">
+                Remember connection details
+              </Label>
+            </div>
           </CardContent>
           <CardFooter className="pt-6">
             <Button className="w-full" type="submit" disabled={loading}>
