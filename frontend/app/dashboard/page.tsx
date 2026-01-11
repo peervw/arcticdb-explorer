@@ -122,25 +122,30 @@ export default function DashboardPage() {
 
     // Initial fetch of libraries
     useEffect(() => {
-        const checkAuth = () => {
+        const checkAuth = async () => {
             const token = localStorage.getItem('arctic_session_token');
             if (!token) {
                 console.log("No token found, redirecting to home");
                 router.replace('/');
                 return;
             }
-            fetchLibraries(true);
+            await fetchLibraries(true, true);
         };
         checkAuth();
     }, [router]);
 
-    const fetchLibraries = async (silent: boolean = false) => {
+    const fetchLibraries = async (silent: boolean = false, isInitial: boolean = false) => {
         try {
             const res = await api.getLibraries();
             setLibraries(res.libraries);
             if (!silent) toast.success("Libraries refreshed");
         } catch (err: any) {
             toast.error("Failed to fetch libraries: " + err.message);
+            if (isInitial) {
+                // If initial load fails (e.g. server offline or session invalid), redirect to connect
+                api.disconnect();
+                router.replace('/');
+            }
         }
     };
 
