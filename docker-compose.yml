@@ -1,5 +1,5 @@
 services:
-  backend:
+  arctic-backend: # Renamed for uniqueness
     build: ./backend
     volumes:
       - arctic_data:/app/arctic_db
@@ -12,26 +12,34 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      dokploy-network:
-        aliases:
-          - arctic-api  # This is your unique internal hostname
+      - arctic-internal
+      - dokploy-network
 
-  frontend:
+  arctic-frontend: # Renamed for uniqueness
     build:
       context: ./frontend
       args:
-        # Use the alias here
-        - API_INTERNAL_URL=http://arctic-api:8000/api
+        - API_INTERNAL_URL=http://arctic-backend:8000/api
     environment:
-      - API_INTERNAL_URL=http://arctic-api:8000/api
+      - API_INTERNAL_URL=http://arctic-backend:8000/api
     depends_on:
-      backend:
+      arctic-backend:
         condition: service_healthy
     restart: unless-stopped
     networks:
+      - arctic-internal
       - dokploy-network
+    # Force Dokploy/Traefik to see this service
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.services.arctic-frontend.loadbalancer.server.port=3000"
 
 networks:
+  # Internal network for just these two to talk
+  arctic-internal:
+    driver: bridge
+  # External network for Dokploy's proxy to reach the frontend
   dokploy-network:
     external: true
 
