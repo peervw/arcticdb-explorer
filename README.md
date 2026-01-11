@@ -65,6 +65,8 @@ Server runs on `http://localhost:8000`.
 
 ```bash
 cd frontend
+# Create local env file to point to local backend
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api" > .env.local
 npm install
 npm run dev
 ```
