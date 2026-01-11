@@ -48,13 +48,19 @@ export const api = {
     },
 
     getLibraries: async () => {
-        const res = await fetch(`${API_BASE}/libraries`, { headers: getHeaders() });
+        const res = await fetch(`${API_BASE}/libraries`, {
+            headers: getHeaders(),
+            cache: 'no-store'
+        });
         if (!res.ok) throw new Error('Failed to fetch libraries');
         return res.json();
     },
 
     getSymbols: async (library: string) => {
-        const res = await fetch(`${API_BASE}/libraries/${library}/symbols`, { headers: getHeaders() });
+        const res = await fetch(`${API_BASE}/libraries/${library}/symbols`, {
+            headers: getHeaders(),
+            cache: 'no-store'
+        });
         if (!res.ok) throw new Error('Failed to fetch symbols');
         return res.json();
     },
