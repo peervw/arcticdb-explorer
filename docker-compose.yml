@@ -29,11 +29,6 @@ services:
     networks:
       - arctic-internal
       - dokploy-network
-    # Force Dokploy/Traefik to see this service
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=dokploy-network"
-      - "traefik.http.services.arctic-frontend.loadbalancer.server.port=3000"
 
 networks:
   # Internal network for just these two to talk
