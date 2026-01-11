@@ -25,7 +25,7 @@ services:
       arctic-backend:
         condition: service_healthy
     restart: unless-stopped
-    expose:
+    ports:
       - 3000
     networks:
       - dokploy-network
